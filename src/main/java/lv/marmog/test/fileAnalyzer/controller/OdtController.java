@@ -2,10 +2,8 @@ package lv.marmog.test.fileAnalyzer.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lv.marmog.test.fileAnalyzer.log.InjectLog;
 import lv.marmog.test.fileAnalyzer.model.OdtFile;
 import lv.marmog.test.fileAnalyzer.service.OdtService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
