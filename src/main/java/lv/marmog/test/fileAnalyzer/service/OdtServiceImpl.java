@@ -18,19 +18,25 @@ import static lv.marmog.test.fileAnalyzer.constants.Constants.IMPORT_PATTERN;
 public class OdtServiceImpl implements OdtService{
 
     private static final Logger log = LoggerFactory.getLogger(OdtServiceImpl.class);
+    private static Map<String, String> linkMap = new HashMap<>();
 
-    static Map<String, List<String>> importMap = new HashMap<>();
-    static List <OdtFile> odtFiles = new ArrayList<>();
-
+    /**
+     * searches for all the odt files in the root folder and its sub folders
+     * @param folder - root folder
+     * @return the list ao odt files that have imports and all their imported files
+     */
     @Override
     public List<OdtFile> getFileImports(File folder) {
-        scanDirectory(folder, importMap);
+        Map<String, List<String>> importMap;
+        List <OdtFile> odtFiles = new ArrayList<>();
+
+        importMap = scanDirectory(folder);
 
         importMap.forEach((file, imports) -> {
-            OdtFile newFile = new OdtFile(file);
+            OdtFile newFile = new OdtFile(file, linkMap.get(file));
             List<OdtFile> newImportFiles = new LinkedList<>();
             imports.forEach(importStr -> {
-                newImportFiles.add(new OdtFile(importStr));
+                newImportFiles.add(new OdtFile(importStr, linkMap.get(importStr)));
             });
             newFile.setImportFiles(newImportFiles);
             odtFiles.add(newFile);
@@ -39,30 +45,39 @@ public class OdtServiceImpl implements OdtService{
         return odtFiles;
     }
 
-    private void scanDirectory(File dir,  Map<String, List<String>> importMap) {
-        if (!dir.exists() || !dir.isDirectory()) {
-            log.error("Invalid directory: {}",dir);
+    /**
+     * scans the specified directory for odt files
+     * @param folder
+     * @return
+     */
+    private   Map<String,List<String>> scanDirectory(File folder) {
+        Map<String,List<String>> map = new HashMap<>();
+        if (!folder.exists() || !folder.isDirectory()) {
+            log.error("Invalid directory: {}",folder);
             //TODO throw invalidDirectory
-            return;
+            return map ;
         }
 
-        File[] directoryFiles = dir.listFiles();
+        File[] directoryFiles = folder.listFiles();
         if (directoryFiles == null || directoryFiles.length == 0) {
             //TODO throw noFilesInDirectoryFound
-            log.info("No files found in directory: {} ", dir);
-            return;
+            log.info("No files found in directory: {} ", folder);
+            return map;
         }
         for(File file: directoryFiles){
             if (file.isDirectory()) {
-                scanDirectory(file, importMap);
-            } else {
+                map = scanDirectory(file);
+            } else if(file.getName().endsWith(".odt")) { //check if the file is an odt file
+                linkMap.put(file.getName(), file.toString().replace("\\", "/"));
                 List<String> imports = findImportsInOdt(file);
                 if (!imports.isEmpty()) {
-                    importMap.put(file.getName(), imports);
+                    map.put(file.getName(), imports);
                 }
+            } else{
+                log.info("The file is not .odt file {} ", file);
             }
         }
-
+        return map;
     }
 
     public static List<String> findImportsInOdt(File odtFile) {

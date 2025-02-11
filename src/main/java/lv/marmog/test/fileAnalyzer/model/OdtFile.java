@@ -23,6 +23,11 @@ public class OdtFile {
         this.name = name;
     }
 
+    public OdtFile(String name, String link) {
+        this.name = name;
+        this.link = link;
+    }
+
     public void setImportFiles(List<OdtFile> importFiles) {
         this.importFiles = importFiles;
     }

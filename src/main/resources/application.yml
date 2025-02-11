@@ -6,4 +6,4 @@ server:
   port: 8080
 
 directory:
-  path: src/main/resources/static/root-file/template
+  path: src/main/resources/static/root-file/
