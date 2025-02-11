@@ -49,7 +49,7 @@ public class OdtServiceImpl implements OdtService{
         File[] directoryFiles = dir.listFiles();
         if (directoryFiles == null || directoryFiles.length == 0) {
             //TODO throw noFilesInDirectoryFound
-            log.info("No files found in directory: {] ", dir);
+            log.info("No files found in directory: {} ", dir);
             return;
         }
         for(File file: directoryFiles){
