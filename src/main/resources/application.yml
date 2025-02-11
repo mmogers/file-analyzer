@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: fileAnalyzer
+
+server:
+  port: 8080
+
+directory:
+  path: src/main/resources/static/root-file/template

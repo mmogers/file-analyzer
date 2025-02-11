@@ -3,14 +3,15 @@ package lv.marmog.test.fileAnalyzer.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lv.marmog.test.fileAnalyzer.model.OdtFile;
-import lv.marmog.test.fileAnalyzer.service.OdtService;
+import lv.marmog.test.fileAnalyzer.service.OdtServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.file.Path;
+import java.io.File;
 import java.util.List;
 
 @RestController
@@ -19,11 +20,15 @@ import java.util.List;
 @Slf4j
 public class OdtController {
 
+    @Value("${directory.path}")
+    String directoryPath;
 
-    private final OdtService odtService;
+    @Autowired
+    OdtServiceImpl odtService;
 
     @GetMapping(value = "/imports")
-    public ResponseEntity<List<OdtFile>> getFileImports(@RequestParam Path folder) {
-        return ResponseEntity.ok(odtService.getFileImports(folder));
+    public ResponseEntity<List<OdtFile>> getFileImports() {
+        return ResponseEntity.ok(odtService.getFileImports(new File(directoryPath)));
     }
+    //add PUT for updating the file
 }
