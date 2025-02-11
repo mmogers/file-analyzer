@@ -20,20 +20,21 @@ import java.util.List;
 @Slf4j
 public class OdtController {
 
-    @Value("${directory.path}")
-    String directoryPath;
+	@Value("${directory.path}")
+	String directoryPath;
 
-    @Autowired
-    OdtServiceImpl odtService;
+	@Autowired
+	OdtServiceImpl odtService;
 
-    /**
-     * lists all import files (name and link) for each such document
-     * directoryPath = path to root-folder, set in application.yml
-     * @return JSON of all .odt documents which have import files
-     */
-    @GetMapping(value = "/imports")
-    public ResponseEntity<List<OdtFile>> getFileImports() {
-        return ResponseEntity.ok(odtService.getFileImports(new File(directoryPath)));
-    }
-    //add PUT for updating the file
+	/**
+	 * lists all import files (name and link) for each such document directoryPath = path to root-folder, set in
+	 * application.yml
+	 *
+	 * @return JSON of all .odt documents which have import files
+	 */
+	@GetMapping(value = "/imports")
+	public ResponseEntity<List<OdtFile>> getFileImports() {
+		return ResponseEntity.ok(odtService.getFileImports(new File(directoryPath)));
+	}
+	//add PUT for updating the file
 }

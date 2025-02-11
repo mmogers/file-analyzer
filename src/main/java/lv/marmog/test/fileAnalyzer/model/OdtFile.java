@@ -10,26 +10,25 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL) // should we ignore null fields during serialization
 public class OdtFile {
 
-    @JsonProperty("name")
-    private String name;
+	@JsonProperty("name")
+	private String name;
 
-    @JsonProperty("link")
-    private String link;
+	@JsonProperty("link")
+	private String link;
 
-    @JsonProperty("importFiles")
-    private List<OdtFile> importFiles;
+	@JsonProperty("importFiles")
+	private List<OdtFile> importFiles;
 
+	public OdtFile(String name, String link) {
+		this.name = name;
+		this.link = link;
+	}
 
-    public OdtFile(String name, String link) {
-        this.name = name;
-        this.link = link;
-    }
+	public void setImportFiles(List<OdtFile> importFiles) {
+		this.importFiles = importFiles;
+	}
 
-    public void setImportFiles(List<OdtFile> importFiles) {
-        this.importFiles = importFiles;
-    }
-
-    public void setLink(String link) {
-        this.link = link;
-    }
+	public void setLink(String link) {
+		this.link = link;
+	}
 }
