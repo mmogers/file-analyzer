@@ -18,7 +18,7 @@ import static lv.marmog.test.fileAnalyzer.constants.Constants.IMPORT_PATTERN;
 public class OdtServiceImpl implements OdtService{
 
     private static final Logger log = LoggerFactory.getLogger(OdtServiceImpl.class);
-    private static Map<String, String> linkMap = new HashMap<>();
+    private static final Map<String, String> linkMap = new HashMap<>();
 
     /**
      * searches for all the odt files in the root folder and its sub folders
@@ -47,7 +47,7 @@ public class OdtServiceImpl implements OdtService{
 
     /**
      * scans the specified directory for odt files
-     * @param folder
+     * @param folder root folder
      * @return
      */
     private   Map<String,List<String>> scanDirectory(File folder) {

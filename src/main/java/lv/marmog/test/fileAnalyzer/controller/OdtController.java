@@ -27,10 +27,9 @@ public class OdtController {
     OdtServiceImpl odtService;
 
     /**
-     * returns JSON of all .odt documents which have import files,
      * lists all import files (name and link) for each such document
      * directoryPath = path to root-folder, set in application.yml
-     * @return
+     * @return JSON of all .odt documents which have import files
      */
     @GetMapping(value = "/imports")
     public ResponseEntity<List<OdtFile>> getFileImports() {

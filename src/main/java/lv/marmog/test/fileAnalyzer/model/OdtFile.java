@@ -19,9 +19,6 @@ public class OdtFile {
     @JsonProperty("importFiles")
     private List<OdtFile> importFiles;
 
-    public OdtFile(String name) {
-        this.name = name;
-    }
 
     public OdtFile(String name, String link) {
         this.name = name;
