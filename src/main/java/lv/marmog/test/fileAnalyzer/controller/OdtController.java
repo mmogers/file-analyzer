@@ -1,6 +1,5 @@
 package lv.marmog.test.fileAnalyzer.controller;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lv.marmog.test.fileAnalyzer.model.OdtFile;
 import lv.marmog.test.fileAnalyzer.service.OdtServiceImpl;
@@ -15,7 +14,6 @@ import java.io.File;
 import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/odt")
 @Slf4j
 public class OdtController {
@@ -25,6 +23,9 @@ public class OdtController {
 
 	private final OdtServiceImpl odtService;
 
+	OdtController(OdtServiceImpl odtService){
+		this.odtService = odtService;
+	}
 	/**
 	 * lists all import files (name and link) for each such document directoryPath = path to root-folder, set in
 	 * application.yml
@@ -38,7 +39,7 @@ public class OdtController {
 	//TODO change to @QueryParams
 	@PutMapping("/imports")
 	public ResponseEntity<OdtFile> updateLink(String sourceFile, String existingLink, String newLink) throws Exception {
-		return ResponseEntity.ok(odtService.updateImport("template_bb02.odt", "block_1.odt","block_1a.odt"));
+		return ResponseEntity.ok(odtService.updateImport("template_bb01.odt", "block_2.odt","block_1a.odt"));
 	}
 
 }
