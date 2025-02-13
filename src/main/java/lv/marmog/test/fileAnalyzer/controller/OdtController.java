@@ -40,39 +40,25 @@ public class OdtController {
 
 	@Operation(summary = "Get ODT file imports", description = "Retrieves a list of ODT files imports from a specified directory and its subdirectories")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully retrieved list of odt files with their imports",
-					content = @Content(mediaType = "application/json")),
-			@ApiResponse(responseCode = "500", description = "Internal server error",
-					content = @Content)
-	})
+			@ApiResponse(responseCode = "200", description = "Successfully retrieved list of odt files with their imports", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content) })
 	@GetMapping(value = "/imports")
 	public ResponseEntity<List<OdtFile>> getFileImports()
 			throws OdtProcessingException, InvalidFolderException, DirectoryScanException {
 		return ResponseEntity.ok(odtService.getFileImports(new File(directoryPath)));
 	}
 
-	@Operation(
-			summary = "Update an import link in a given source ODT file",
-			description = "Updates a specified import block reference inside an ODT file."
-	)
+	@Operation(summary = "Update an import link in a given source ODT file", description = "Updates a specified import block reference inside an ODT file.")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully updated the import link",
-					content = @Content(mediaType = "application/json")),
-			@ApiResponse(responseCode = "400", description = "Invalid input data",
-					content = @Content),
-			@ApiResponse(responseCode = "500", description = "Internal server error",
-					content = @Content)
-	})
+			@ApiResponse(responseCode = "200", description = "Successfully updated the import link", content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
+			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content) })
 	@PutMapping("/imports")
 	public ResponseEntity<OdtFile> updateLink(
-			@Parameter(description = "File name", example = "template_bb01.odt")
-			@RequestParam(required = true) String sourceFile,
-			@Parameter(description = "Import block name to replace", example = "block_2.odt")
-			@RequestParam(required = true) String existingLink,
-			@Parameter(description = "New import block name", example = "block_1a.odt")
-			@RequestParam(required = true) String newLink)
+			@Parameter(description = "File name", example = "template_bb01.odt") @RequestParam(required = true) String sourceFile,
+			@Parameter(description = "Import block name to replace", example = "block_2.odt") @RequestParam(required = true) String existingBlockName,
+			@Parameter(description = "New import block name", example = "block_1a.odt") @RequestParam(required = true) String newBlockName)
 			throws Exception {
-		return ResponseEntity.ok(odtService.updateImport(sourceFile, existingLink, newLink));
+		return ResponseEntity.ok(odtService.updateImport(sourceFile, existingBlockName, newBlockName));
 	}
-
 }

@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>lv.marmog.test</groupId>
-	<artifactId>fileAnalyzer</artifactId>
+	<artifactId>file-analyzerr</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>fileAnalyzer</name>
 	<url/>

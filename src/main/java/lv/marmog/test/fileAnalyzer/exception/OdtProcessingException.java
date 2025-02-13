@@ -1,9 +1,6 @@
 package lv.marmog.test.fileAnalyzer.exception;
 
-public class OdtProcessingException extends Exception{
-	public OdtProcessingException(String message) {
-		super(message);
-	}
+public class OdtProcessingException extends CustomException {
 
 	public OdtProcessingException(String message, Throwable cause) {
 		super(message, cause);
