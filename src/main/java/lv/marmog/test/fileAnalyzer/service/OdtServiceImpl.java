@@ -178,7 +178,7 @@ public class OdtServiceImpl implements OdtService {
 	}
 
 	private static void addFilesToZip(File rootDir, File currentDir, ZipOutputStream zos) throws IOException {
-		for (File file : currentDir.listFiles()) {
+		for (File file : currentDir.listFiles()) { //TODO check for null pointer
 			if (file.isDirectory()) {
 				addFilesToZip(rootDir, file, zos);    // add files to ZIP recursively
 			} else {
@@ -217,8 +217,7 @@ public class OdtServiceImpl implements OdtService {
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			Document doc = builder.parse(xmlFile);
-			return doc;
+			return builder.parse(xmlFile);
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 			throw new XmlProcessingException("Error parsing XML file: " + xmlFile.getAbsolutePath(), e);
 		}
@@ -365,8 +364,7 @@ public class OdtServiceImpl implements OdtService {
 	}
 
 	private static List<String> getImportFromFile(File odtFile, String fileType, Map<String, String> linkMap)
-			throws IOException, ParserConfigurationException, SAXException, ExtractionException,
-			XmlProcessingException {
+			throws IOException, ExtractionException, XmlProcessingException {
 		List<String> importList = new ArrayList<>();
 
 		// Unzip the .odt file (a ZIP archive)
@@ -400,14 +398,13 @@ public class OdtServiceImpl implements OdtService {
 	}
 
 	private static Document getXmlDocument(DocumentBuilderFactory factory, File xmlFile) throws XmlProcessingException {
-		Document doc;
+
 		try {
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			doc = builder.parse(xmlFile);
+			return builder.parse(xmlFile);
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 			throw new XmlProcessingException("Error parsing XML file: " + xmlFile.getAbsolutePath(), e);
 		}
-		return doc;
 	}
 
 	/**
