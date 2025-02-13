@@ -178,7 +178,11 @@ public class OdtServiceImpl implements OdtService {
 	}
 
 	private static void addFilesToZip(File rootDir, File currentDir, ZipOutputStream zos) throws IOException {
-		for (File file : currentDir.listFiles()) { //TODO check for null pointer
+		if (currentDir == null || !currentDir.exists()) {
+			log.warn("Skipping ZIP process: directory '{}' does not exist or is null", currentDir);
+			return;
+		}
+		for (File file : currentDir.listFiles()) {
 			if (file.isDirectory()) {
 				addFilesToZip(rootDir, file, zos);    // add files to ZIP recursively
 			} else {
