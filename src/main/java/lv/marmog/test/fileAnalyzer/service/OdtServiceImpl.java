@@ -1,7 +1,6 @@
 //TODO add more logs
 //TODO add junit tests
 //TODO place all the methods one after another
-//TODO extract a method for creating linkMap
 //TODO check SOLID
 package lv.marmog.test.fileAnalyzer.service;
 
@@ -29,20 +28,23 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import static lv.marmog.test.fileAnalyzer.constants.Constants.CONTENT_XML;
 import static lv.marmog.test.fileAnalyzer.constants.Constants.IMPORT_PATTERN;
+import static lv.marmog.test.fileAnalyzer.constants.Constants.STYLES_XML;
 import static org.apache.tomcat.util.http.fileupload.FileUtils.deleteDirectory;
 
 @Service
 public class OdtServiceImpl implements OdtService {
 
 	private static final Logger log = LoggerFactory.getLogger(OdtServiceImpl.class);
-	private static final Map<String, String> linkMap = new HashMap<>();
-
 	@Value("${directory.path}")
 	String directoryPath;
 
 	@Override
 	public List<OdtFile> getFileImports(File folder) {
+	//	TODO: serch imports with tag text:text-input
+
+		Map<String, String> linkMap = getLinkMap(folder);
 
 		Map<String, List<String>> importMap;
 		List<OdtFile> odtFiles = new ArrayList<>();
@@ -64,14 +66,15 @@ public class OdtServiceImpl implements OdtService {
 
 	@Override
 	public OdtFile updateImport(String odtFilePath, String oldFileName , String newFileName ) throws Exception {
+		Map<String, String> linkMap = getLinkMap(new File(directoryPath));
 
-		getFileImports(new File(directoryPath));
 		// Unzip the .odt file (a ZIP archive)
 		File tempDir = unzipOdt(linkMap.get(odtFilePath));
 
-		// update the XML files (content.xml and/or styles.xml)
-		updateImportInContentXml(tempDir, oldFileName, newFileName);
-		//TODO update import in styles as well
+		// update the XML files (content.xml and styles.xml)
+		//TODO: maybe we can check where is the source file, and check only one
+		updateImportInXmlFiles(tempDir, oldFileName, newFileName, CONTENT_XML);
+		updateImportInXmlFiles(tempDir, oldFileName, newFileName, STYLES_XML);
 
 		// zip .odt file back
 		zipOdt(tempDir, linkMap.get(odtFilePath));
@@ -105,17 +108,17 @@ public class OdtServiceImpl implements OdtService {
 		}
 	}
 
-	private static void updateImportInContentXml(File tempDir, String oldFileName, String newFileName) throws Exception { //TODO check Exception
-		File contentXmlFile = new File(tempDir, "content.xml"); //TODO add constants for styles.xml and for content.xml
-		if (!contentXmlFile.exists()) {
-			log.warn("content.xml not found!");
+	private static void updateImportInXmlFiles(File tempDir, String oldFileName, String newFileName, String fileType) throws Exception { //TODO check Exception
+		File xmlFile = new File(tempDir, fileType);
+		if (!xmlFile.exists()) {
+			log.warn("{} not found!", fileType);
 			return;
 		}
 
 		// pasre the content.xml
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
-		Document doc = builder.parse(contentXmlFile);
+		Document doc = builder.parse(xmlFile);
 
 		// find and replace the import placeholder
 		NodeList importNodes = doc.getElementsByTagName("text:text-input");
@@ -130,7 +133,7 @@ public class OdtServiceImpl implements OdtService {
 		}
 
 		// write modified content.xml back
-		try (FileOutputStream fos = new FileOutputStream(contentXmlFile)) {
+		try (FileOutputStream fos = new FileOutputStream(xmlFile)) {
 			// save the updated XML
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			Transformer transformer = transformerFactory.newTransformer();
@@ -175,7 +178,6 @@ public class OdtServiceImpl implements OdtService {
 			if (file.isDirectory()) {
 				map = scanDirectory(file);
 			} else if (file.getName().endsWith(".odt")) { //check if the file is an odt file
-				linkMap.put(file.getName(), file.toString().replace("\\", "/"));
 				List<String> imports = findImportsInOdt(file);
 				if (!imports.isEmpty()) {
 					map.put(file.getName(), imports);
@@ -202,7 +204,7 @@ public class OdtServiceImpl implements OdtService {
 				log.warn("{} not found in {} ", fileType, odtFile.getName());
 				return importList;
 			}
-
+			//TODO: try another approach
 			try (InputStream is = zipFile.getInputStream(contentEntry);
 					BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 				StringBuilder content = new StringBuilder();
@@ -222,5 +224,32 @@ public class OdtServiceImpl implements OdtService {
 			//TODO exception
 		}
 		return importList;
+	}
+	public static  Map<String, String> getLinkMap(File folder){
+		Map<String, String> linkMap = new HashMap<>();
+		if (!folder.exists() || !folder.isDirectory()) {
+			log.error("Invalid directory: {}", folder);
+			//TODO throw invalidDirectory
+			return linkMap;
+		}
+
+		File[] directoryFiles = folder.listFiles();
+		if (directoryFiles == null || directoryFiles.length == 0) {
+			//TODO throw noFilesInDirectoryFound
+			log.info("No files found in directory: {} ", folder);
+			return linkMap;
+		}
+		for (File file : directoryFiles) {
+			if (file.isDirectory()) {
+				linkMap.putAll(getLinkMap(file));
+			} else if (file.getName().startsWith("~$")) { //file is corrupted
+				log.warn("the file is corrupted: {} ", file.getName());
+			} else if (file.getName().endsWith(".odt")) { //check if the file is an odt file
+				linkMap.put(file.getName(), file.toString().replace("\\", "/"));
+			} else {
+				log.info("The file is not .odt file {} ", file);
+			}
+		}
+		return linkMap;
 	}
 }
