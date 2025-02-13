@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL) // should we ignore null fields during serialization
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OdtFile {
 
 	@JsonProperty("name")

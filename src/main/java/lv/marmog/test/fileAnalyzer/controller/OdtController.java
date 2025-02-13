@@ -7,6 +7,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import lv.marmog.test.fileAnalyzer.exception.DirectoryScanException;
+import lv.marmog.test.fileAnalyzer.exception.InvalidFolderException;
+import lv.marmog.test.fileAnalyzer.exception.OdtProcessingException;
 import lv.marmog.test.fileAnalyzer.model.OdtFile;
 import lv.marmog.test.fileAnalyzer.service.OdtServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,7 +46,8 @@ public class OdtController {
 					content = @Content)
 	})
 	@GetMapping(value = "/imports")
-	public ResponseEntity<List<OdtFile>> getFileImports() {
+	public ResponseEntity<List<OdtFile>> getFileImports()
+			throws OdtProcessingException, InvalidFolderException, DirectoryScanException {
 		return ResponseEntity.ok(odtService.getFileImports(new File(directoryPath)));
 	}
 

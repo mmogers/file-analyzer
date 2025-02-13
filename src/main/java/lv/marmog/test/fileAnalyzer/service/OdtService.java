@@ -1,5 +1,8 @@
 package lv.marmog.test.fileAnalyzer.service;
 
+import lv.marmog.test.fileAnalyzer.exception.DirectoryScanException;
+import lv.marmog.test.fileAnalyzer.exception.InvalidFolderException;
+import lv.marmog.test.fileAnalyzer.exception.OdtProcessingException;
 import lv.marmog.test.fileAnalyzer.model.OdtFile;
 
 import java.io.File;
@@ -7,7 +10,8 @@ import java.util.List;
 
 public interface OdtService {
 
-	List<OdtFile> getFileImports(File dir);
+	List<OdtFile> getFileImports(File dir)
+			throws InvalidFolderException, OdtProcessingException, DirectoryScanException;
 
 	OdtFile updateImport(String sourceFile, String existingLink, String newLink) throws Exception; //TODO take care of exception
 }
