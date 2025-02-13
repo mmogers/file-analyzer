@@ -122,7 +122,7 @@ public class OdtServiceImpl implements OdtService {
 
 		// Return an updated OdtFile object with new import information
 		OdtFile updatedFile = new OdtFile(sourceFile, linkMap.get(sourceFile));
-		log.info("Returning ODT file with updated input file : {}", updatedFile.getName());
+		log.info("Returning ODT file with updated input file : {}", updatedFile);
 
 		OdtFile importBlock = new OdtFile(newBlockName, linkMap.get(newBlockName));
 		List<OdtFile> importList = new ArrayList<>();
