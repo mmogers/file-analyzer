@@ -121,7 +121,7 @@ public class OdtServiceImpl implements OdtService {
 
 	// add files to ZIP recursively
 	private static void addFilesToZip(File rootDir, File currentDir, ZipOutputStream zos) throws IOException {
-		for (File file : currentDir.listFiles()) {
+		for (File file : currentDir.listFiles()) { //TODO check for NULL POINTER
 			if (file.isDirectory()) {
 				addFilesToZip(rootDir, file, zos);
 			} else {
@@ -170,14 +170,15 @@ public class OdtServiceImpl implements OdtService {
 
 	private static File unzipOdt(String odtFilePath) throws IOException {
 		File tempDir = new File("temp_odt_dir");
-		if (!tempDir.exists())
+		if (!tempDir.exists()) {
 			tempDir.mkdir();
+		}
 
 		try (ZipInputStream zis = new ZipInputStream(new FileInputStream(odtFilePath))) {
 			ZipEntry entry;
 			while ((entry = zis.getNextEntry()) != null) {
 				File newFile = new File(tempDir, entry.getName());
-				new File(newFile.getParent()).mkdirs();
+				new File(newFile.getParent()).mkdirs();//TODO check if uts ignored
 
 				try (FileOutputStream fos = new FileOutputStream(newFile)) {
 					IOUtils.copy(zis, fos);
