@@ -1,3 +1,5 @@
+//TODO check if put is correct here
+//TODO remove or add block
 package lv.marmog.test.fileAnalyzer.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -7,7 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import lv.marmog.test.fileAnalyzer.exception.DirectoryScanException;
+import lv.marmog.test.fileAnalyzer.exception.FolderProcessingException;
 import lv.marmog.test.fileAnalyzer.exception.InvalidFolderException;
 import lv.marmog.test.fileAnalyzer.exception.OdtProcessingException;
 import lv.marmog.test.fileAnalyzer.model.OdtFile;
@@ -15,7 +17,7 @@ import lv.marmog.test.fileAnalyzer.service.OdtServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,7 +46,7 @@ public class OdtController {
 			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content) })
 	@GetMapping(value = "/imports")
 	public ResponseEntity<List<OdtFile>> getFileImports()
-			throws OdtProcessingException, InvalidFolderException, DirectoryScanException {
+			throws OdtProcessingException, InvalidFolderException, FolderProcessingException {
 		return ResponseEntity.ok(odtService.getFileImports(new File(directoryPath)));
 	}
 
@@ -53,7 +55,7 @@ public class OdtController {
 			@ApiResponse(responseCode = "200", description = "Successfully updated the import link", content = @Content(mediaType = "application/json")),
 			@ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
 			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content) })
-	@PutMapping("/imports")
+	@PatchMapping("/imports")
 	public ResponseEntity<OdtFile> updateLink(
 			@Parameter(description = "File name", example = "template_bb01.odt") @RequestParam(required = true) String sourceFile,
 			@Parameter(description = "Import block name to replace", example = "block_2.odt") @RequestParam(required = true) String existingBlockName,

@@ -1,3 +1,4 @@
+//TODO check if there are too many esceptions
 package lv.marmog.test.fileAnalyzer.exception;
 
 public class CustomException extends Exception {

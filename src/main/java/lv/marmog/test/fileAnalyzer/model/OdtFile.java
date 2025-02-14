@@ -15,8 +15,16 @@ public class OdtFile {
 	@JsonProperty("name")
 	private String name;
 
+	public String getName() {
+		return name;
+	}
+
 	@JsonProperty("link")
 	private String link;
+
+	public List<OdtFile> getImportFiles() {
+		return importFiles;
+	}
 
 	@JsonProperty("importFiles")
 	private List<OdtFile> importFiles;

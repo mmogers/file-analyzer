@@ -4,17 +4,15 @@
 //TODO check if link exists
 //TODO check all the cases - empty directory, no link, no odt file, some other files, corrupted files
 //TODO what to do if we want to show all odt files even without imports
+//TODO add readme file
 package lv.marmog.test.fileAnalyzer.service;
 
-import lv.marmog.test.fileAnalyzer.exception.DirectoryScanException;
-import lv.marmog.test.fileAnalyzer.exception.FileCleanupException;
-import lv.marmog.test.fileAnalyzer.exception.FileCompressionException;
-import lv.marmog.test.fileAnalyzer.exception.ExtractionException;
+import lv.marmog.test.fileAnalyzer.exception.FileProcessingException;
+import lv.marmog.test.fileAnalyzer.exception.FolderProcessingException;
 import lv.marmog.test.fileAnalyzer.exception.FileNotFoundInFolderException;
 import lv.marmog.test.fileAnalyzer.exception.InvalidFolderException;
 import lv.marmog.test.fileAnalyzer.exception.OdtProcessingException;
 import lv.marmog.test.fileAnalyzer.exception.XmlProcessingException;
-import lv.marmog.test.fileAnalyzer.exception.XmlUpdateException;
 import lv.marmog.test.fileAnalyzer.model.OdtFile;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
@@ -55,58 +53,55 @@ public class OdtServiceImpl implements OdtService {
 
 	@Override
 	public List<OdtFile> getFileImports(File folder)
-			throws InvalidFolderException, OdtProcessingException, DirectoryScanException {
+			throws InvalidFolderException, OdtProcessingException, FolderProcessingException {
 
 		if (folder == null || !folder.exists() || !folder.isDirectory()) {
 			log.error("Invalid folder: {}", folder);
 			throw new InvalidFolderException(
 					"Invalid folder provided: " + (folder != null ? folder.getAbsolutePath() : "null"));
 		}
-		try {
-			//list of all .odt files and path to them in folder and subfolders
-			Map<String, String> linkMap = getLinkMap(folder);
-			Map<String, List<String>> importMap = scanDirectory(folder, linkMap);
 
-			if (importMap.isEmpty()) {
-				log.warn("No files with imports found in directory: {}", folder);
-			}
-			// odt files that have imports
-			List<OdtFile> odtFiles = new ArrayList<>();
+		//list of all .odt files and path to them in folder and subfolders
+		Map<String, String> linkMap = getLinkMap(folder);
+		Map<String, List<String>> importMap = scanDirectory(folder, linkMap);
 
-			importMap.forEach((fileName, imports) -> {
-				OdtFile newFile = new OdtFile(fileName, linkMap.get(fileName));
-				List<OdtFile> newImportFiles = new LinkedList<>();
-				imports.forEach(importStr -> {
-					if (linkMap.containsKey(importStr)) {
-						newImportFiles.add(new OdtFile(importStr, linkMap.get(importStr)));
-					} else {
-						log.warn("Import link not found in linkMap for file {}", importStr);
-					}
+		if (importMap.isEmpty()) {
+			log.warn("No files with imports found in directory: {}", folder);
+		}
+		// odt files that have imports
+		List<OdtFile> odtFiles = new ArrayList<>();
 
-				});
-				newFile.setImportFiles(newImportFiles);
-				odtFiles.add(newFile);
+		importMap.forEach((fileName, imports) -> {
+			OdtFile newFile = new OdtFile(fileName, linkMap.get(fileName));
+			List<OdtFile> newImportFiles = new LinkedList<>();
+			imports.forEach(importStr -> {
+				if (linkMap.containsKey(importStr)) {
+					newImportFiles.add(new OdtFile(importStr, linkMap.get(importStr)));
+				} else {
+					log.warn("Import link not found in linkMap for file {}", importStr);
+				}
 
 			});
-			log.info("Successfully found {} ODT files with links", odtFiles.size());
-			return odtFiles;
+			newFile.setImportFiles(newImportFiles);
+			odtFiles.add(newFile);
 
-		} catch (DirectoryScanException e) {
-			throw new DirectoryScanException("Failed to scan directory: " + folder + ". " + e.getMessage(), e);
-		}
-
+		});
+		log.info("Successfully found {} ODT files with links", odtFiles.size());
+		return odtFiles;
 	}
 
 	@Override
 	public OdtFile updateImport(String sourceFile, String existingBlockName, String newBlockName) throws Exception {
 		log.info("Starting import update for file: {}, replacing '{}' with '{}'", sourceFile, existingBlockName,
 				newBlockName);
+		//TODO check sourceFile existingBlockName newBlockName
 
 		Map<String, String> linkMap = getLinkMap(new File(directoryPath));
 
-		if (!linkMap.containsKey(sourceFile)) {
+		if (!linkMap.containsKey(sourceFile) || !linkMap.containsKey(existingBlockName) || !linkMap.containsKey(
+				newBlockName)) {
 			log.error("ODT file '{}' not found in directory {}", sourceFile, directoryPath);
-			throw new FileNotFoundInFolderException("File not found: " + sourceFile);
+			throw new FileNotFoundInFolderException("File not found");
 		}
 
 		File tempDir;
@@ -132,52 +127,72 @@ public class OdtServiceImpl implements OdtService {
 		return updatedFile;
 	}
 
-	private static void deleteTempDirectory(String sourceFile, File tempDir) throws FileCleanupException {
+	protected static Map<String, List<String>> scanDirectory(File folder, Map<String, String> linkMap)
+			throws InvalidFolderException, OdtProcessingException, FolderProcessingException {
+
+		checkValidFolder(folder);
+
+		File[] directoryFiles = folder.listFiles();
+		Map<String, List<String>> map = new HashMap<>();
+
+		if (directoryFiles == null || directoryFiles.length == 0) {
+			log.info("No files found in directory: {}", folder);
+			return map;
+		}
+
+		for (File file : directoryFiles) {
+			processFileOrDirectory(file, linkMap, map);
+		}
+
+		return map;
+	}
+
+	protected static void deleteTempDirectory(String sourceFile, File tempDir) throws FileProcessingException {
 		try {
 			log.info("deleting temp directory {} ", tempDir.getAbsolutePath());
 			deleteDirectory(tempDir);
 		} catch (IOException e) {
-			throw new FileCleanupException("Failed to delete temporary files for: " + sourceFile, e);
+			throw new FileProcessingException("Failed to delete temporary files for: " + sourceFile, e);
 		}
 	}
 
-	private static void zipFile(String sourceFile, File tempDir, Map<String, String> linkMap)
-			throws FileCompressionException {
+	protected static void zipFile(String sourceFile, File tempDir, Map<String, String> linkMap)
+			throws OdtProcessingException {
 		try {
 			zipOdt(tempDir, linkMap.get(sourceFile)); // zip directory back into an .odt file
 		} catch (IOException e) {
-			throw new FileCompressionException("Failed to compress ODT file: " + sourceFile, e);
+			throw new OdtProcessingException("Failed to compress ODT file: " + sourceFile, e);
 		}
 	}
 
-	private static void zipOdt(File tempDir, String outputOdtPath) throws IOException {
+	protected static void zipOdt(File tempDir, String outputOdtPath) throws IOException {
 		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(outputOdtPath))) {
 			addFilesToZip(tempDir, tempDir, zos);    // add files to ZIP recursively
 		}
 	}
 
-	private static void updateXmlFiles(String sourceFile, String existingBlockName, String newBlockName, File tempDir)
-			throws XmlUpdateException {
+	protected static void updateXmlFiles(String sourceFile, String existingBlockName, String newBlockName, File tempDir)
+			throws XmlProcessingException {
 		try {
 			updateImportInXmlFiles(tempDir, existingBlockName, newBlockName, CONTENT_XML);
 			updateImportInXmlFiles(tempDir, existingBlockName, newBlockName, STYLES_XML);
 		} catch (Exception e) {
-			throw new XmlUpdateException("Error updating XML files in: " + sourceFile, e);
+			throw new XmlProcessingException("Error updating XML files in: " + sourceFile, e);
 		}
 	}
 
-	private static File unzipFile(String sourceFile, Map<String, String> linkMap) throws ExtractionException {
+	protected static File unzipFile(String sourceFile, Map<String, String> linkMap) throws OdtProcessingException {
 		File tempDir;
 
 		try {
 			tempDir = unzipOdt(linkMap.get(sourceFile));
-		} catch (IOException e) {
-			throw new ExtractionException("Failed to unzip ODT file: " + sourceFile, e);
+		} catch (IOException | FolderProcessingException e) {
+			throw new OdtProcessingException("Failed to unzip ODT file: " + sourceFile, e);
 		}
 		return tempDir;
 	}
 
-	private static void addFilesToZip(File rootDir, File currentDir, ZipOutputStream zos) throws IOException {
+	protected static void addFilesToZip(File rootDir, File currentDir, ZipOutputStream zos) throws IOException {
 		if (currentDir == null || !currentDir.exists()) {
 			log.warn("Skipping ZIP process: directory '{}' does not exist or is null", currentDir);
 			return;
@@ -196,7 +211,7 @@ public class OdtServiceImpl implements OdtService {
 		}
 	}
 
-	private static void updateImportInXmlFiles(File tempDir, String oldFileName, String newFileName, String fileType)
+	protected static void updateImportInXmlFiles(File tempDir, String oldFileName, String newFileName, String fileType)
 			throws XmlProcessingException {
 		File xmlFile = new File(tempDir, fileType);
 
@@ -217,7 +232,7 @@ public class OdtServiceImpl implements OdtService {
 
 	}
 
-	private static Document getXmlDocument(File xmlFile) throws XmlProcessingException {
+	protected static Document getXmlDocument(File xmlFile) throws XmlProcessingException {
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
@@ -258,11 +273,11 @@ public class OdtServiceImpl implements OdtService {
 		}
 	}
 
-	private static File unzipOdt(String odtFilePath) throws IOException, ExtractionException {
+	protected static File unzipOdt(String odtFilePath)
+			throws IOException, FolderProcessingException, OdtProcessingException {
 		File tempDir = new File("temp_odt_dir");
 		if (!tempDir.exists() && !tempDir.mkdir()) {
-			log.error("Failed to create temporary directory '{}'", tempDir.getAbsolutePath());
-			throw new ExtractionException("Could not create temp directory: " + tempDir.getAbsolutePath());
+			throw new FolderProcessingException("Could not create temp directory: " + tempDir.getAbsolutePath());
 		}
 
 		try (ZipInputStream zis = new ZipInputStream(new FileInputStream(odtFilePath))) {
@@ -272,44 +287,24 @@ public class OdtServiceImpl implements OdtService {
 
 				File parentDir = newFile.getParentFile();
 				if (parentDir != null && !parentDir.exists() && !parentDir.mkdirs()) {
-					throw new ExtractionException("Could not create directory: " + parentDir.getAbsolutePath());
+					throw new FolderProcessingException("Could not create directory: " + parentDir.getAbsolutePath());
 				}
 
 				try (FileOutputStream fos = new FileOutputStream(newFile)) {
 					IOUtils.copy(zis, fos);
 				} catch (IOException e) {
-					throw new ExtractionException("Error writing file: " + newFile.getAbsolutePath(), e);
+					throw new FileProcessingException("Error writing file: " + newFile.getAbsolutePath(), e);
 				}
 			}
-		} catch (IOException e) {
-			throw new ExtractionException("Failed to extract ODT file: " + odtFilePath, e);
+		} catch (IOException | FileProcessingException e) {
+			throw new OdtProcessingException("Failed to extract ODT file: " + odtFilePath, e);
 		}
 		log.info("Successfully extracted ODT file to '{}'", tempDir.getAbsolutePath());
 		return tempDir;
 	}
 
-	private Map<String, List<String>> scanDirectory(File folder, Map<String, String> linkMap)
-			throws InvalidFolderException, DirectoryScanException, OdtProcessingException {
-
-		checkValidFolder(folder);
-
-		File[] directoryFiles = folder.listFiles();
-		Map<String, List<String>> map = new HashMap<>();
-
-		if (directoryFiles == null || directoryFiles.length == 0) {
-			log.info("No files found in directory: {}", folder);
-			return map;
-		}
-
-		for (File file : directoryFiles) {
-			processFileOrDirectory(file, linkMap, map);
-		}
-
-		return map;
-	}
-
-	private void processFileOrDirectory(File file, Map<String, String> linkMap, Map<String, List<String>> map)
-			throws DirectoryScanException, OdtProcessingException {
+	private static void processFileOrDirectory(File file, Map<String, String> linkMap, Map<String, List<String>> map)
+			throws OdtProcessingException, FolderProcessingException, InvalidFolderException {
 
 		if (file.isDirectory()) {
 			scanSubDirectory(file, linkMap, map);
@@ -326,7 +321,7 @@ public class OdtServiceImpl implements OdtService {
 	/**
 	 * Processes an ODT file and extracts import links.
 	 */
-	private static void processOdfFile(File file, Map<String, String> linkMap, Map<String, List<String>> map)
+	protected static void processOdfFile(File file, Map<String, String> linkMap, Map<String, List<String>> map)
 			throws OdtProcessingException {
 
 		try {
@@ -336,39 +331,35 @@ public class OdtServiceImpl implements OdtService {
 				map.put(file.getName(), imports);
 				log.info("Found imports in file: {} with imports: {}", file.getName(), imports);
 			}
-		} catch (IOException | ParserConfigurationException | SAXException | ExtractionException |
-				XmlProcessingException e) {
+		} catch (IOException | ParserConfigurationException | SAXException | XmlProcessingException |
+				FolderProcessingException e) {
 			throw new OdtProcessingException("Error processing .odt file: " + file, e);
 		}
 	}
 
-	private void scanSubDirectory(File file, Map<String, String> linkMap, Map<String, List<String>> map)
-			throws DirectoryScanException {
+	protected static void scanSubDirectory(File file, Map<String, String> linkMap, Map<String, List<String>> map)
+			throws FolderProcessingException, OdtProcessingException, InvalidFolderException {
+		map.putAll(scanDirectory(file, linkMap)); //recursion
 
-		try {
-			map.putAll(scanDirectory(file, linkMap)); //recursion
-		} catch (Exception e) {
-			throw new DirectoryScanException("Error scanning sub-directory: " + file, e);
-		}
 	}
 
-	private static void checkValidFolder(File folder) throws InvalidFolderException {
+	protected static void checkValidFolder(File folder) throws InvalidFolderException {
 		if (!folder.exists() || !folder.isDirectory()) {
 			log.error("Invalid directory: {}", folder);
 			throw new InvalidFolderException("Invalid directory: " + folder);
 		}
 	}
 
-	public static List<String> findImportsInOdt(File odtFile, Map<String, String> linkMap)
-			throws IOException, ParserConfigurationException, SAXException, ExtractionException,
-			XmlProcessingException {
+	protected static List<String> findImportsInOdt(File odtFile, Map<String, String> linkMap)
+			throws IOException, ParserConfigurationException, SAXException, XmlProcessingException,
+			FolderProcessingException, OdtProcessingException {
 		List<String> imports = getImportFromFile(odtFile, "styles.xml", linkMap);
 		imports.addAll(getImportFromFile(odtFile, "content.xml", linkMap));
 		return imports;
 	}
 
-	private static List<String> getImportFromFile(File odtFile, String fileType, Map<String, String> linkMap)
-			throws IOException, ExtractionException, XmlProcessingException {
+	protected static List<String> getImportFromFile(File odtFile, String fileType, Map<String, String> linkMap)
+			throws IOException, XmlProcessingException, FolderProcessingException, OdtProcessingException {
 		List<String> importList = new ArrayList<>();
 
 		// Unzip the .odt file (a ZIP archive)
@@ -401,21 +392,11 @@ public class OdtServiceImpl implements OdtService {
 		return importList;
 	}
 
-	private static Document getXmlDocument(DocumentBuilderFactory factory, File xmlFile) throws XmlProcessingException {
-
-		try {
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			return builder.parse(xmlFile);
-		} catch (ParserConfigurationException | SAXException | IOException e) {
-			throw new XmlProcessingException("Error parsing XML file: " + xmlFile.getAbsolutePath(), e);
-		}
-	}
-
 	/**
 	 * @param folder The folder to scan
 	 * @return A Map of odt file names to file paths
 	 */
-	public static Map<String, String> getLinkMap(File folder) throws InvalidFolderException {
+	protected static Map<String, String> getLinkMap(File folder) throws InvalidFolderException {
 		Map<String, String> linkMap = new HashMap<>();
 
 		checkValidFolder(folder);
