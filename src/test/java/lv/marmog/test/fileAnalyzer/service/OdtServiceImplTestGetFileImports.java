@@ -14,7 +14,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,7 +129,7 @@ class OdtServiceImplTestGetFileImports {
 	void test_GetLinkMap_RecursiveTraversal_ShouldFindNestedFolder() throws Exception {
 		// Given: A folder with subfolders and ODT files in it
 		File folder = new File("src/test/resources/root-test-folder");
-		File subFolder = new File("src/test/resources/root-test-folder/common");
+//		File subFolder = new File("src/test/resources/root-test-folder/common");
 
 		// When:
 		Map<String, String> result = OdtServiceImpl.getLinkMap(folder);
@@ -205,10 +204,10 @@ class OdtServiceImplTestGetFileImports {
 	void test_GetImportFromFile_XmlDoesVotExist() throws Exception {
 
 		File file = new File("src/test/resources/root-test-folder", "template_aa01.odt");
-		File tempDir = new File("src/test/resources/template_aa01_test");
+//		File tempDir = new File("src/test/resources/template_aa01_test");
 		String fileType = "fakeName.xml";
 
-		File xmlFile = new File(tempDir, fileType);
+//		File xmlFile = new File(tempDir, fileType);
 
 		List<String> importList;
 		importList = odtService.getImportFromFile(file, fileType, initLinkMap());

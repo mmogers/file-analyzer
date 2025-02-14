@@ -1,51 +1,25 @@
 package lv.marmog.test.fileAnalyzer.service;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static lv.marmog.test.fileAnalyzer.service.utils.Utils.initLinkMap;
-import lv.marmog.test.fileAnalyzer.exception.FolderProcessingException;
-import lv.marmog.test.fileAnalyzer.exception.InvalidFolderException;
 import lv.marmog.test.fileAnalyzer.model.OdtFile;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.TestPropertySource;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
 
-import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 @TestPropertySource(properties = "directory.path=/test/directory")
 class OdtServiceImplTestUpdateImport {
 
 	@InjectMocks
 	private OdtServiceImpl odtService;
-	@Value("${directory.path}")
-	private String directoryPath;
+	/*@Value("${directory.path}")
+	private String directoryPath;*/
 
 	@Test
 	void test_UpdateImport_Success() throws Exception {

@@ -7,12 +7,6 @@ import java.util.Map;
 
 public class Utils {
 
-	private OdtServiceImpl odtService;
-
-	public Utils(OdtServiceImpl odtService) {
-		this.odtService = odtService;
-	}
-
 	public static Map<String, String> initLinkMap() {
 		Map<String, String> linkMap = new HashMap<>();
 		linkMap.put("footer_1.odt", "src/test/resources/root-test-folder/common/footer_1.odt");
