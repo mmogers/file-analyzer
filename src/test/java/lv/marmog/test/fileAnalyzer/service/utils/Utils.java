@@ -1,7 +1,5 @@
 package lv.marmog.test.fileAnalyzer.service.utils;
 
-import lv.marmog.test.fileAnalyzer.service.OdtServiceImpl;
-
 import java.util.HashMap;
 import java.util.Map;
 
