@@ -1,10 +1,4 @@
-//TODO add junit tests
-//TODO check pom dependencies
-//TODO check SOLID
-//TODO check if link exists
-//TODO check all the cases - empty directory, no link, no odt file, some other files, corrupted files
-//TODO what to do if we want to show all odt files even without imports
-//TODO add readme file
+
 package lv.marmog.test.fileAnalyzer.service;
 
 import lv.marmog.test.fileAnalyzer.exception.FileProcessingException;

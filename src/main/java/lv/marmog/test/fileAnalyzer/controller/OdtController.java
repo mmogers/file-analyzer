@@ -1,5 +1,4 @@
-//TODO check if put is correct here
-//TODO remove or add block
+
 package lv.marmog.test.fileAnalyzer.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
