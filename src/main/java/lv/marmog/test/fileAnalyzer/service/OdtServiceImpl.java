@@ -275,6 +275,9 @@ public class OdtServiceImpl implements OdtService {
 
 	protected static File unzipOdt(String odtFilePath)
 			throws IOException, FolderProcessingException, OdtProcessingException {
+		if(odtFilePath == null) {
+			throw new FolderProcessingException("There is no such file in the folder");
+		}
 		File tempDir = new File("temp_odt_dir");
 		if (!tempDir.exists() && !tempDir.mkdir()) {
 			throw new FolderProcessingException("Could not create temp directory: " + tempDir.getAbsolutePath());

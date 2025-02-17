@@ -1,5 +1,9 @@
 package lv.marmog.test.fileAnalyzer.service;
 
+import lv.marmog.test.fileAnalyzer.exception.FileNotFoundInFolderException;
+import lv.marmog.test.fileAnalyzer.exception.FolderProcessingException;
+import lv.marmog.test.fileAnalyzer.exception.OdtProcessingException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -7,9 +11,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import lv.marmog.test.fileAnalyzer.model.OdtFile;
 import org.springframework.test.context.TestPropertySource;
 
+import static lv.marmog.test.fileAnalyzer.service.utils.Utils.initLinkMap;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 @TestPropertySource(properties = "directory.path=/test/directory")
@@ -17,8 +26,20 @@ class OdtServiceImplTestUpdateImport {
 
 	@InjectMocks
 	private OdtServiceImpl odtService;
-	/*@Value("${directory.path}")
-	private String directoryPath;*/
+
+	private Map<String, String> linkMap;
+	private Map<String, List<String>> map;
+
+	@BeforeEach
+	void setUp() throws Exception {
+		linkMap = initLinkMap();
+		map = new HashMap<>();
+
+		// Inject the directory path into the OdtProcessor
+		Field field = OdtServiceImpl.class.getDeclaredField("directoryPath");
+		field.setAccessible(true);
+		field.set(odtService, "src/test/resources/root-test-folder");
+	}
 
 	@Test
 	void test_UpdateImport_Success() throws Exception {
@@ -27,12 +48,6 @@ class OdtServiceImplTestUpdateImport {
 		String sourceFile = "template_aa02_editable.odt";
 		String existingBlock = "block_1a.odt";
 		String newBlock = "block_1.odt";
-
-		Field field = OdtServiceImpl.class.getDeclaredField("directoryPath");
-		field.setAccessible(true);
-		field.set(odtService, "src/test/resources/root-test-folder");  // Manually inject the value
-
-		assertEquals("src/test/resources/root-test-folder", field.get(odtService));
 
 		OdtFile result1 = odtService.updateImport(sourceFile, existingBlock, newBlock);
 		assertNotNull(result1);
@@ -45,54 +60,56 @@ class OdtServiceImplTestUpdateImport {
 		assertEquals(existingBlock, result2.getImportFiles().get(0).getName());
 	}
 
-	/*@Test
-	void test_UpdateImport_FileNotFound() {
+	@Test
+	void test_UpdateImport_FileNotFound() throws NoSuchFieldException, IllegalAccessException {
 		// Given
 		String sourceFile = "nonexistent.odt";
-		String existingBlock = "oldBlock";
-		String newBlock = "newBlock";
-
-		when(linkMap.containsKey(sourceFile)).thenReturn(false);
-
+		String existingBlock = "block_1a.odt";
+		String newBlock = "block_1.odt";
+ 		//When and then
 		assertThrows(FileNotFoundInFolderException.class, () ->
 				odtService.updateImport(sourceFile, existingBlock, newBlock));
-	}*/
+	}
 
-	/*@Test
-	void test_UpdateImport_UnzipFailure() throws Exception {
+	@Test
+	void test_ProcessOdfFile_Success() throws Exception {
 		// Given
-		String sourceFile = "corrupt.odt";
-		String existingBlock = "oldBlock";
-		String newBlock = "newBlock";
+		File file = new File("src/test/resources/root-test-folder/template_aa01.odt");
 
-		when(linkMap.containsKey(sourceFile)).thenReturn(true);
-		when(linkMap.containsKey(existingBlock)).thenReturn(true);
-		when(linkMap.containsKey(newBlock)).thenReturn(true);
-		when(linkMap.get(sourceFile)).thenReturn(tempDir.getAbsolutePath());
+		// When
+		odtService.processOdfFile(file, linkMap, map);
 
-		doThrow(new OdtProcessingException("Failed to unzip"))
-				.when(odtService).unzipFile(eq(sourceFile), anyMap());
+		// Then
+		assertTrue(map.containsKey(file.getName()));
+		assertNotNull(map.get(file.getName()));
+		assertFalse(map.get(file.getName()).isEmpty());
+	}
 
-		assertThrows(OdtProcessingException.class, () ->
-				odtService.updateImport(sourceFile, existingBlock, newBlock));
-	}*/
-
-	/*@Test
-	void test_UpdateImport_ZipFailure() throws Exception {
+	@Test
+	void test_ProcessOdfFile_FileNotFound() {
 		// Given
-		String sourceFile = "test.odt";
-		String existingBlock = "oldBlock";
-		String newBlock = "newBlock";
+		String fileName = "nonexistent.odt";
+		File file = new File("src/test/resources/root-test-folder/" + fileName);
 
-		when(linkMap.containsKey(sourceFile)).thenReturn(true);
-		when(linkMap.containsKey(existingBlock)).thenReturn(true);
-		when(linkMap.containsKey(newBlock)).thenReturn(true);
-		when(linkMap.get(sourceFile)).thenReturn(tempDir.getAbsolutePath());
+		// When and Then
+		assertThrows(OdtProcessingException.class, () -> {
+			odtService.processOdfFile(file, linkMap, map);
+		});
+	}
 
-		doThrow(new OdtProcessingException("Failed to zip"))
-				.when(odtService).zipFile(eq(sourceFile), any(File.class), anyMap());
+	@Test
+	void test_ProcessOdfFile_FolderProcessingException() throws Exception {
+		// Given
+		String fileName = "invalid_folder.odt"; // A file that triggers folder processing errors
+		File file = new File("src/test/resources/root-test-folder/" + fileName);
 
-		assertThrows(OdtProcessingException.class, () ->
-				odtService.updateImport(sourceFile, existingBlock, newBlock));
-	}*/
+		// When , Then
+		OdtProcessingException exception = assertThrows(OdtProcessingException.class, () -> {
+			odtService.processOdfFile(file, linkMap, map);
+		});
+
+		assertEquals("Error processing .odt file: " + file, exception.getMessage());
+		assertTrue(exception.getCause() instanceof FolderProcessingException);
+	}
+
 }

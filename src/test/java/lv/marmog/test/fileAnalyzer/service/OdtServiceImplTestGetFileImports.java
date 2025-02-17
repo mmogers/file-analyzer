@@ -119,7 +119,7 @@ class OdtServiceImplTestGetFileImports {
 		Map<String, String> result = OdtServiceImpl.getLinkMap(folder);
 
 		// Then: all ODT files should be found and other ignored
-		assertEquals(9, result.size()); //2 headers, 2 footers, 2 templates.3 blocks
+		assertEquals(9, result.size()); //2 headers, 2 footers, 2 templates.3 blocks, 1 corrupted
 		assertNotEquals(6, folder.listFiles().length); //5 odt files, 1 folder and some non odt or corrupted files
 		assertTrue(result.containsKey("template_aa01.odt"));
 		assertTrue(result.containsKey("template_aa02_editable.odt"));
