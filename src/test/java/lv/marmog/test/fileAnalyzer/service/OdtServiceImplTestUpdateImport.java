@@ -61,7 +61,7 @@ class OdtServiceImplTestUpdateImport {
 	}
 
 	@Test
-	void test_UpdateImport_FileNotFound() throws NoSuchFieldException, IllegalAccessException {
+	void test_UpdateImport_FileNotFound()  {
 		// Given
 		String sourceFile = "nonexistent.odt";
 		String existingBlock = "block_1a.odt";
@@ -98,7 +98,7 @@ class OdtServiceImplTestUpdateImport {
 	}
 
 	@Test
-	void test_ProcessOdfFile_FolderProcessingException() throws Exception {
+	void test_ProcessOdfFile_FolderProcessingException() {
 		// Given
 		String fileName = "invalid_folder.odt"; // A file that triggers folder processing errors
 		File file = new File("src/test/resources/root-test-folder/" + fileName);
